@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinSCPSyncSvc", "WinSCPSyncSvc\WinSCPSyncSvc.csproj", "{8FE45563-7B41-4FA7-806D-44A966162A38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinSCPSyncLib", "WinSCPSyncLib\WinSCPSyncLib.csproj", "{6B463866-1A67-46C3-8509-3C178BDFA304}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8FE45563-7B41-4FA7-806D-44A966162A38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FE45563-7B41-4FA7-806D-44A966162A38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FE45563-7B41-4FA7-806D-44A966162A38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FE45563-7B41-4FA7-806D-44A966162A38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B463866-1A67-46C3-8509-3C178BDFA304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B463866-1A67-46C3-8509-3C178BDFA304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B463866-1A67-46C3-8509-3C178BDFA304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B463866-1A67-46C3-8509-3C178BDFA304}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
