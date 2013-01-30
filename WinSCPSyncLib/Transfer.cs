@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using WinSCP;
+using WinSCPSyncLib.Infrastructure.DependencyResolution;
 using WinSCPSyncLib.Model;
 
 namespace WinSCPSyncLib
@@ -9,6 +10,7 @@ namespace WinSCPSyncLib
     public class Transfer : IDisposable
     {
         private bool _disposed = false;
+        private IBackupManager _backupManager;
 
         public Transfer(BackupJob job)
         {
@@ -77,7 +79,7 @@ namespace WinSCPSyncLib
         {
             ThreadPool.QueueUserWorkItem((state) =>
             {
-                Running = true;
+                MarkAsRunning();
                 
                 var result = WinSCPSession.SynchronizeDirectories(
                     (SynchronizationMode)Enum.Parse(typeof(SynchronizationMode), Job.SyncMode),
@@ -85,7 +87,7 @@ namespace WinSCPSyncLib
                     Job.Destination,
                     Job.RemoveFiles);
 
-                Running = false;
+                MarkAsStopped();
 
                 try
                 {
@@ -96,6 +98,22 @@ namespace WinSCPSyncLib
                     // TODO
                 }
             });
+        }
+
+        private void MarkAsRunning()
+        {
+            Running = true;
+
+            var backupManager = IoC.Resolve<IBackupManager>();
+            backupManager.MarkJobAsRunning(Job.Id);
+        }
+
+        private void MarkAsStopped()
+        {
+            Running = false;
+
+            var backupManager = IoC.Resolve<IBackupManager>();
+            backupManager.JobHasStopped(Job.Id);
         }
 
         public void Dispose()
