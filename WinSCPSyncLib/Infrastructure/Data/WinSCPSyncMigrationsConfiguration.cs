@@ -6,6 +6,7 @@ namespace WinSCPSyncLib.Infrastructure.Data
     {
         public WinSCPSyncMigrationsConfiguration()
         {
+            AutomaticMigrationDataLossAllowed = true;
             AutomaticMigrationsEnabled = true;
         }
     }

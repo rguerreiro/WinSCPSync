@@ -11,6 +11,7 @@ namespace WinSCPSyncLib.Infrastructure.DependencyResolution
             For<IConfigOptions>().Singleton().Use<ConfigOptions>();
             For<IDbContext>().Use<WinSCPSyncContext>();
             For<IBackupManager>().Use<BackupManager>();
+            For<ITransferManager>().Singleton().Use<TransferManager>();
         }
     }
 }

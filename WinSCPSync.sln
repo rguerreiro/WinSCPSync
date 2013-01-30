@@ -5,6 +5,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinSCPSyncSvc", "WinSCPSync
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinSCPSyncLib", "WinSCPSyncLib\WinSCPSyncLib.csproj", "{6B463866-1A67-46C3-8509-3C178BDFA304}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{B423C8C3-1249-478B-9C72-8A5841E2F3EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinSCP", "WinSCP", "{598303C0-71BC-4A34-BD54-4E99B65930C9}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\WinSCP\licence.txt = Dependencies\WinSCP\licence.txt
+		Dependencies\WinSCP\readme.txt = Dependencies\WinSCP\readme.txt
+		Dependencies\WinSCP\readme_automation.txt = Dependencies\WinSCP\readme_automation.txt
+		Dependencies\WinSCP\WinSCP.com = Dependencies\WinSCP\WinSCP.com
+		Dependencies\WinSCP\WinSCP.dll = Dependencies\WinSCP\WinSCP.dll
+		Dependencies\WinSCP\WinSCP.exe = Dependencies\WinSCP\WinSCP.exe
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,5 +34,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{598303C0-71BC-4A34-BD54-4E99B65930C9} = {B423C8C3-1249-478B-9C72-8A5841E2F3EF}
 	EndGlobalSection
 EndGlobal
