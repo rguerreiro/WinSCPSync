@@ -1,5 +1,4 @@
-﻿using System;
-using WinSCPSyncLib;
+﻿using Topshelf;
 using WinSCPSyncLib.Infrastructure.DependencyResolution;
 
 namespace WinSCPSyncSvc
@@ -8,26 +7,23 @@ namespace WinSCPSyncSvc
     {
         public static void Main(string[] args)
         {
-            // Dependency injection
+            // Dependency injection initialization
             IoC.Init();
 
-            var backupManager = IoC.Resolve<IBackupManager>();
-            var transferManager = IoC.Resolve<ITransferManager>();
-            var jobs = backupManager.AllJobs();
-
-            foreach (var job in jobs)
+            HostFactory.Run(x =>
             {
-                transferManager.Listen(job);
-            }
+                x.UseLog4Net("log4net.config");
 
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+                x.Service<SyncServiceControl>();
 
-            transferManager.StopAll();
+                x.RunAsLocalSystem();
 
-            Console.WriteLine("Exited!");
+                x.StartAutomatically();
 
-            System.Threading.Thread.Sleep(5000); // waiting 5 seconds just see latest writes to console
+                x.SetDescription("Service to sync directories between local computer and a remote FTP/SFTP host");
+                x.SetDisplayName("WinSCP Sync Service");
+                x.SetServiceName("WinSCPSyncSvc");
+            });
         }
     }
 }

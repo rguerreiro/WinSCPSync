@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WinSCPSyncLib.Infrastructure.Data;
@@ -8,6 +9,7 @@ namespace WinSCPSyncLib
 {
     public class BackupManager : IBackupManager
     {
+        private readonly ILog _log = LogManager.GetLogger(typeof(BackupManager));
         private IDbContext _db;
 
         public BackupManager(IDbContext db)
@@ -32,43 +34,59 @@ namespace WinSCPSyncLib
 
         public void MarkJobAsRunning(int jobId)
         {
+            _log.DebugFormat("Marking job #{0} as running in the db", jobId);
+
             var job = GetJob(jobId);
 
-            if (job == null) 
+            if (job == null)
                 throw new ArgumentException("Job unknown");
 
-            if (job.Running) 
+            if (job.Running)
+            {
+                _log.DebugFormat("Job #{0} was already running in the db", jobId);
                 return; // not throwing an exception because some point in time the job is needed to be running and we already got that
+            }
 
             job.Running = true;
             job.RunningSince = DateTime.Now;
 
             _db.Commit();
+
+            _log.DebugFormat("Job #{0} was marked as running in the db", jobId);
         }
 
         public void JobHasStopped(int jobId)
         {
+            _log.DebugFormat("Marking job #{0} as stopped in the db", jobId);
+
             var job = GetJob(jobId);
 
             if (job == null) throw new ArgumentException("Job unknown");
 
-            if (job.Running)
+            if (!job.Running)
             {
-                job.Running = false;
-                job.RunningSince = null;
-                job.LastRun = DateTime.Now;
-
-                _db.Commit();
+                _log.DebugFormat("Job #{0} was already stopped in the db", jobId);
+                return;
             }
+
+            job.Running = false;
+            job.RunningSince = null;
+            job.LastRun = DateTime.Now;
+
+            _db.Commit();
+
+            _log.DebugFormat("Job #{0} was marked as stopped in the db", jobId);
         }
 
         public void AddJob(BackupJob job)
         {
             if (job == null) throw new ArgumentNullException("job");
 
-            var countSimilar = _db.BackupJob.Where(x => 
-                x.Source == job.Source 
-                && x.Destination == job.Destination 
+            _log.InfoFormat("Adding new job to db for folder {0}", job.Source);
+
+            var countSimilar = _db.BackupJob.Where(x =>
+                x.Source == job.Source
+                && x.Destination == job.Destination
                 && x.Protocol == job.Protocol
             ).Count();
 
@@ -81,10 +99,14 @@ namespace WinSCPSyncLib
             _db.BackupJob.Add(job);
 
             _db.Commit();
+
+            _log.DebugFormat("Job was added to db for folder {0}", job.Source);
         }
 
         public void RemoveJob(int jobId)
         {
+            _log.InfoFormat("Removing job #{0} from db", jobId);
+
             var job = GetJob(jobId);
 
             if (job == null) throw new ArgumentException("Job unknown");
@@ -93,12 +115,16 @@ namespace WinSCPSyncLib
             _db.BackupJob.Remove(job);
 
             _db.Commit();
+
+            _log.DebugFormat("Job #{0} was removed from db", jobId);
         }
 
         public void SaveJob(BackupJob job)
         {
             if (job == null) throw new ArgumentNullException("job");
             if (job.Id == 0) throw new ArgumentException("This job is probably a new one. Please consider adding it (call AddJob()) instead of saving it");
+
+            _log.DebugFormat("Saving job #{0} to db", job.Id);
 
             _db.Detach(job);
 
@@ -114,6 +140,8 @@ namespace WinSCPSyncLib
             job.RunningSince = null;
 
             _db.Commit();
+
+            _log.DebugFormat("Job #{0} was saved to db", job.Id);
         }
     }
 }

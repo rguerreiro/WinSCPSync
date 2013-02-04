@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.IO;
 using System.Threading;
 using WinSCP;
@@ -9,6 +10,7 @@ namespace WinSCPSyncLib
 {
     public class Transfer : IDisposable
     {
+        private readonly ILog _log = LogManager.GetLogger(typeof(Transfer));
         private static readonly object _syncObject = new object();
         private bool _disposed = false;
         private bool _initialized = false;
@@ -18,6 +20,8 @@ namespace WinSCPSyncLib
         {
             Job = job;
             Running = false;
+
+            TransferSource = Path.GetDirectoryName(job.Source);
         }
 
         /// <summary>
@@ -26,6 +30,8 @@ namespace WinSCPSyncLib
         public void Init()
         {
             if (_initialized) throw new ApplicationException("Transfer already initialized");
+
+            _log.InfoFormat("Initializing transfer for job #{0} in path {1}", Job.Id, TransferSource);
 
             Options = new SessionOptions
             {
@@ -36,26 +42,23 @@ namespace WinSCPSyncLib
                 SshHostKeyFingerprint = Job.HostKeyFingerprint
             };
 
-            var path = Path.GetDirectoryName(Job.Source);
-
-            Watcher = new FileSystemWatcher(path, "*");
+            Watcher = new FileSystemWatcher(TransferSource, "*");
             Watcher.IncludeSubdirectories = true;
             Watcher.NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite;
 
             FileSystemEventHandler onChanged = (sender, args) =>
             {
-                Console.WriteLine("Something {0}: {1}", args.ChangeType, args.FullPath);
+                _log.DebugFormat("Something {0} at {1}", args.ChangeType, args.FullPath);
                 Start();
             };
             RenamedEventHandler onRenamed = (sender, args) =>
             {
-                Console.WriteLine("Something was renamed: {0}", args.FullPath);
+                _log.DebugFormat("Something was renamed at {0}", args.FullPath);
                 Start();
             };
             ErrorEventHandler onError = (sender, args) =>
             {
-                // TODO
-                Console.WriteLine("Received an error: {0}", args.GetException().Message);
+                _log.Error("An error occured while transfering", args.GetException());
             };
 
             Watcher.Changed += onChanged;
@@ -67,13 +70,13 @@ namespace WinSCPSyncLib
 
             Watcher.EnableRaisingEvents = true;
 
-            Console.WriteLine("Started listening in {0}", path);
+            _log.InfoFormat("Started listening in {0}", TransferSource);
 
             _initialized = true;
 
             if (Job.Running)
             {
-                Console.WriteLine("Job was previously marked as running. Probably service was abruptly closed");
+                _log.InfoFormat("Job #{0} was previously marked as running. Probably service was abruptly closed. Starting the sync...", Job.Id);
                 Start();
             }
         }
@@ -86,20 +89,18 @@ namespace WinSCPSyncLib
             if (!_initialized) throw new ApplicationException("Transfer wasn't initialized. Please call Init()");
 
             Watcher.EnableRaisingEvents = false;
-            
-            var path = Path.GetDirectoryName(Job.Source);
 
-            Console.WriteLine("Stopped listening at {0}", path);
+            _log.InfoFormat("Stopped listening at {0}", TransferSource);
 
             if (IsTransferRunning() && _currSession != null)
             {
-                Console.WriteLine("Stopping current transfer...");
+                _log.InfoFormat("Stopping current transfer at {0}...", TransferSource);
 
                 _currSession.Abort();
                 _currSession.Dispose();
                 _currSession = null;
 
-                Console.WriteLine("Current transfer was stopped...");
+                _log.InfoFormat("Current transfer was stopped at {0}", TransferSource);
             }
         }
 
@@ -107,7 +108,7 @@ namespace WinSCPSyncLib
         {
             if (IsTransferRunning()) return;
 
-            Console.WriteLine("Starting transfer...");
+            _log.InfoFormat("Starting transfer at {0}...", TransferSource);
 
             MarkAsRunning();
             Run();
@@ -117,8 +118,10 @@ namespace WinSCPSyncLib
         {
             FileTransferredEventHandler onFileTransferred = (sender, args) =>
             {
-                // TODO
-                Console.WriteLine("Transferred {0} {1}...{2}", args.Destination, args.FileName, args.Error != null ? args.Error.Message : String.Empty);
+                _log.DebugFormat("Transferred {0} to {1}", args.FileName, args.Destination);
+
+                if (args.Error != null)
+                    _log.Error("Error while transferring file " + args.FileName, args.Error);
             };
 
             ThreadPool.QueueUserWorkItem((state) =>
@@ -130,7 +133,7 @@ namespace WinSCPSyncLib
                         _currSession.FileTransferred += onFileTransferred;
                         _currSession.Open(Options);
 
-                        Console.WriteLine("Session was opened and going to sync directories...");
+                        _log.InfoFormat("Session was opened and going to sync directories from {0}...", TransferSource);
 
                         var result = _currSession.SynchronizeDirectories(
                             (SynchronizationMode)Enum.Parse(typeof(SynchronizationMode), Job.SyncMode),
@@ -146,33 +149,33 @@ namespace WinSCPSyncLib
                             // this way it will run again whenever the service restarts or a change happens on this same directory
                             MarkAsStopped();
 
-                            Console.WriteLine("Directories were synced with success");
+                            _log.InfoFormat("{0} was synced with success", TransferSource);
                         }
                         catch (Exception exception)
                         {
-                            Console.WriteLine("Some errors occured in the sync: {0}", exception.GetBaseException().Message);
+                            _log.Error("Some errors occured while syncing " + TransferSource, exception);
                         }
                     }
                     catch (SessionLocalException sle)
                     {
                         // Probably aborted
-                        Console.WriteLine("Something happened locally while syncing directories: {0}", sle.GetBaseException().Message);
+                        _log.Error("Something happened locally while syncing " + TransferSource, sle);
                     }
                     catch (SessionRemoteException sre)
                     {
-                        // Connection went down?
-                        Console.WriteLine("Something happened remotelly while syncing directories: {0}", sre.GetBaseException().Message);
+                        // Connection went down or refused
+                        _log.Error("Something happened remotely while syncing " + TransferSource, sre);
                     }
                     catch (SessionException sessionException)
                     {
-                        Console.WriteLine("Unexpected session exception while syncing directories: {0}", sessionException.GetBaseException().Message);
+                        _log.Error("Unexpected session exception while syncing " + TransferSource, sessionException);
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("Unexpected exception while syncing directories: {0}", exception.GetBaseException().Message);
+                        _log.Error("Unexpected exception while syncing " + TransferSource, exception);
                     }
 
-                    Console.WriteLine("Session ended.");
+                    _log.InfoFormat("Session for {0} ended", TransferSource);
                 }
 
                 _currSession = null;
@@ -181,6 +184,8 @@ namespace WinSCPSyncLib
 
         private void MarkAsRunning()
         {
+            _log.DebugFormat("Marking transfer at {0} as running", TransferSource);
+
             lock (_syncObject)
             {
                 Running = true;
@@ -192,6 +197,8 @@ namespace WinSCPSyncLib
 
         private void MarkAsStopped()
         {
+            _log.DebugFormat("Marking transfer at {0} as stopped", TransferSource);
+
             lock (_syncObject)
             {
                 Running = false;
@@ -222,10 +229,11 @@ namespace WinSCPSyncLib
             _disposed = true;
             Watcher = null;
 
-            Console.WriteLine("Transfer disposed");
+            _log.DebugFormat("Transfer for job #{0} was disposed", Job.Id);
         }
 
         public SessionOptions Options { get; private set; }
+        public string TransferSource { get; private set; }
         public BackupJob Job { get; private set; }
         public FileSystemWatcher Watcher { get; private set; }
         public bool Running { get; private set; }
