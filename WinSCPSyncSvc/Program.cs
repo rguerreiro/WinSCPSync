@@ -26,6 +26,8 @@ namespace WinSCPSyncSvc
             transferManager.StopAll();
 
             Console.WriteLine("Exited!");
+
+            System.Threading.Thread.Sleep(5000); // waiting 5 seconds just see latest writes to console
         }
     }
 }

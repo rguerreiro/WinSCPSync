@@ -21,10 +21,14 @@ namespace WinSCPSyncLib
 
         public void StopAll()
         {
+            Console.WriteLine("Stopping all transfers...");
+
             foreach (var transfer in _transfers.Values)
             {
                 transfer.Stop();
             }
+
+            Console.WriteLine("All transfers were stopped");
         }
 
         public void Dispose()
@@ -40,6 +44,8 @@ namespace WinSCPSyncLib
             _transfers.Clear();
 
             _disposed = true;
+
+            Console.WriteLine("Transfer Manager disposed");
         }
     }
 }

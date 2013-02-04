@@ -9,6 +9,7 @@ namespace WinSCPSyncLib
 {
     public class Transfer : IDisposable
     {
+        private static readonly object _syncObject = new object();
         private bool _disposed = false;
         private bool _initialized = false;
         private Session _currSession = null;
@@ -36,17 +37,15 @@ namespace WinSCPSyncLib
             };
 
             var path = Path.GetDirectoryName(Job.Source);
+
             Watcher = new FileSystemWatcher(path, "*");
-
-            Console.WriteLine("Started listening in {0}", path);
-
             Watcher.IncludeSubdirectories = true;
             Watcher.NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite;
 
-            FileSystemEventHandler onChanged = (sender, args) => 
+            FileSystemEventHandler onChanged = (sender, args) =>
             {
                 Console.WriteLine("Something {0}: {1}", args.ChangeType, args.FullPath);
-                Start(); 
+                Start();
             };
             RenamedEventHandler onRenamed = (sender, args) =>
             {
@@ -68,11 +67,13 @@ namespace WinSCPSyncLib
 
             Watcher.EnableRaisingEvents = true;
 
+            Console.WriteLine("Started listening in {0}", path);
+
             _initialized = true;
 
             if (Job.Running)
             {
-                Console.WriteLine("Job was previously marked as running. Probably service was abruptly closed.");
+                Console.WriteLine("Job was previously marked as running. Probably service was abruptly closed");
                 Start();
             }
         }
@@ -82,19 +83,31 @@ namespace WinSCPSyncLib
         /// </summary>
         public void Stop()
         {
-            Watcher.EnableRaisingEvents = false;
+            if (!_initialized) throw new ApplicationException("Transfer wasn't initialized. Please call Init()");
 
-            if (Running && _currSession != null)
+            Watcher.EnableRaisingEvents = false;
+            
+            var path = Path.GetDirectoryName(Job.Source);
+
+            Console.WriteLine("Stopped listening at {0}", path);
+
+            if (IsTransferRunning() && _currSession != null)
             {
+                Console.WriteLine("Stopping current transfer...");
+
                 _currSession.Abort();
                 _currSession.Dispose();
                 _currSession = null;
+
+                Console.WriteLine("Current transfer was stopped...");
             }
         }
 
         private void Start()
         {
-            if (Running) return;
+            if (IsTransferRunning()) return;
+
+            Console.WriteLine("Starting transfer...");
 
             MarkAsRunning();
             Run();
@@ -129,9 +142,11 @@ namespace WinSCPSyncLib
                         {
                             result.Check(); // it will throw on any error
 
-                            // only marking as stopped when everything went oko. 
+                            // only marking as stopped when everything went ok. 
                             // this way it will run again whenever the service restarts or a change happens on this same directory
                             MarkAsStopped();
+
+                            Console.WriteLine("Directories were synced with success");
                         }
                         catch (Exception exception)
                         {
@@ -166,18 +181,36 @@ namespace WinSCPSyncLib
 
         private void MarkAsRunning()
         {
-            Running = true;
+            lock (_syncObject)
+            {
+                Running = true;
 
-            var backupManager = IoC.Resolve<IBackupManager>();
-            backupManager.MarkJobAsRunning(Job.Id);
+                var backupManager = IoC.Resolve<IBackupManager>();
+                backupManager.MarkJobAsRunning(Job.Id);
+            }
         }
 
         private void MarkAsStopped()
         {
-            Running = false;
+            lock (_syncObject)
+            {
+                Running = false;
 
-            var backupManager = IoC.Resolve<IBackupManager>();
-            backupManager.JobHasStopped(Job.Id);
+                var backupManager = IoC.Resolve<IBackupManager>();
+                backupManager.JobHasStopped(Job.Id);
+            }
+        }
+
+        /// <summary>
+        /// Thread-safe check to see if transfer is already running
+        /// </summary>
+        /// <returns></returns>
+        public bool IsTransferRunning()
+        {
+            lock (_syncObject)
+            {
+                return Running;
+            }
         }
 
         public void Dispose()
@@ -188,6 +221,8 @@ namespace WinSCPSyncLib
 
             _disposed = true;
             Watcher = null;
+
+            Console.WriteLine("Transfer disposed");
         }
 
         public SessionOptions Options { get; private set; }
