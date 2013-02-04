@@ -5,5 +5,6 @@ namespace WinSCPSyncLib
     public interface ITransferManager
     {
         void Listen(BackupJob job);
+        void StopAll();
     }
 }

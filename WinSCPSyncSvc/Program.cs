@@ -12,15 +12,20 @@ namespace WinSCPSyncSvc
             IoC.Init();
 
             var backupManager = IoC.Resolve<IBackupManager>();
+            var transferManager = IoC.Resolve<ITransferManager>();
             var jobs = backupManager.AllJobs();
 
             foreach (var job in jobs)
             {
-                Console.WriteLine("{0} -> {1}", job.Source, job.Destination);
+                transferManager.Listen(job);
             }
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
+
+            transferManager.StopAll();
+
+            Console.WriteLine("Exited!");
         }
     }
 }

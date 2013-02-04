@@ -34,8 +34,11 @@ namespace WinSCPSyncLib
         {
             var job = GetJob(jobId);
 
-            if (job == null) throw new ArgumentException("Job unknown");
-            if (job.Running) throw new ApplicationException("Job already running");
+            if (job == null) 
+                throw new ArgumentException("Job unknown");
+
+            if (job.Running) 
+                return; // not throwing an exception because some point in time the job is needed to be running and we already got that
 
             job.Running = true;
             job.RunningSince = DateTime.Now;

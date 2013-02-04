@@ -9,6 +9,7 @@ namespace WinSCPSyncLib.Model
         public string Host { get; set; }
         public string HostUsername { get; set; }
         public string HostPassword { get; set; }
+        public string HostKeyFingerprint { get; set; }
         public string Destination { get; set; }
         public string Protocol { get; set; }
         public string SyncMode { get; set; }
