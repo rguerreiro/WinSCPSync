@@ -96,5 +96,10 @@ namespace WinSCPSyncGui.ViewModels
         {
             get { return _job.RunningSince; }
         }
+
+        public DateTime? LastRun
+        {
+            get { return _job.LastRun; }
+        }
     }
 }

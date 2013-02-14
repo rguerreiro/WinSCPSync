@@ -7,14 +7,11 @@ namespace WinSCPSyncGui.ViewModels
 {
     public class JobsViewModel : TabViewModel, IHandle<JobRemoved>
     {
-        private IBackupManager _backupManager;
         private IEventAggregator _events;
         private IObservableCollection<JobViewModel> _jobs;
 
-        public JobsViewModel(IBackupManager backupManager, IEventAggregator events)
+        public JobsViewModel(IEventAggregator events)
         {
-            _backupManager = backupManager;
-            
             _events = events;
             _events.Subscribe(this);
 
@@ -25,13 +22,15 @@ namespace WinSCPSyncGui.ViewModels
 
         private void Load()
         {
-            Jobs = new BindableCollection<JobViewModel>(_backupManager.AllJobs().Select(x => new JobViewModel(x)));
+            var backupManager = IoC.Get<IBackupManager>();
+            Jobs = new BindableCollection<JobViewModel>(backupManager.AllJobs().Select(x => new JobViewModel(x)));
         }
 
-        private void Refresh()
+        public void RefreshJobs()
         {
+            var backupManager = IoC.Get<IBackupManager>();
             Jobs.Clear();
-            Jobs.AddRange(_backupManager.AllJobs().Select(x => new JobViewModel(x)));
+            Jobs.AddRange(backupManager.AllJobs().Select(x => new JobViewModel(x)));
         }
 
         public void AddNew()
