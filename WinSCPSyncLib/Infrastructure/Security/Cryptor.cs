@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Configuration;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,8 +13,9 @@ namespace WinSCPSyncLib.Infrastructure.Security
 
         static Cryptor()
         {
-            _key = System.Text.ASCIIEncoding.ASCII.GetBytes("GSYAHAGCBDUUADIADKOPAAAW");
-            _iv = System.Text.ASCIIEncoding.ASCII.GetBytes("USAZBGAW");
+            // change in app.config for both ui client and windows service
+            _key = System.Text.ASCIIEncoding.ASCII.GetBytes(ConfigurationManager.AppSettings["CryptorSecretKey"]);
+            _iv = System.Text.ASCIIEncoding.ASCII.GetBytes(ConfigurationManager.AppSettings["CryptorInitializationVector"]);
             _provider = new TripleDESCryptoServiceProvider();
         }
 
