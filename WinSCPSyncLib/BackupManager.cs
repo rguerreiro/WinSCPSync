@@ -126,8 +126,6 @@ namespace WinSCPSyncLib
 
             _log.DebugFormat("Saving job #{0} to db", job.Id);
 
-            _db.Detach(job);
-
             var jobAux = GetJob(job.Id);
 
             if (jobAux == null) throw new ArgumentException("Job unknown");
@@ -136,8 +134,12 @@ namespace WinSCPSyncLib
             jobAux.Source = job.Source;
             jobAux.Destination = job.Destination;
             jobAux.Protocol = job.Protocol;
-            job.Running = false;
-            job.RunningSince = null;
+            jobAux.Host = job.Host;
+            jobAux.HostKeyFingerprint = job.HostKeyFingerprint;
+            jobAux.HostPassword = job.HostPassword;
+            jobAux.HostUsername = job.HostUsername;
+            jobAux.RemoveFiles = job.RemoveFiles;
+            jobAux.SyncMode = job.SyncMode;
 
             _db.Commit();
 

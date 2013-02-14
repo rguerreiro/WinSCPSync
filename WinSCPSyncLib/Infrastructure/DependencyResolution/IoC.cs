@@ -13,7 +13,7 @@ namespace WinSCPSyncLib.Infrastructure.DependencyResolution
             {
                 x.Scan(scan =>
                 {
-                    scan.TheCallingAssembly();
+                    scan.AssembliesFromApplicationBaseDirectory();
                     scan.WithDefaultConventions();
                     scan.LookForRegistries();
                     scan.AddAllTypesOf<IStartupTask>();

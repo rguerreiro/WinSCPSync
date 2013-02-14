@@ -96,6 +96,7 @@
   <ItemGroup>
     <Compile Include="BackupManager.cs" />
     <Compile Include="IBackupManager.cs" />
+    <Compile Include="Infrastructure\Security\Cryptor.cs" />
     <Compile Include="ITransferManager.cs" />
     <Compile Include="Model\BackupJob.cs" />
     <Compile Include="Infrastructure\Data\WinSCPSyncMigrationsConfiguration.cs" />

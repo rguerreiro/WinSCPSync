@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using WinSCP;
 using WinSCPSyncLib.Infrastructure.DependencyResolution;
+using WinSCPSyncLib.Infrastructure.Security;
 using WinSCPSyncLib.Model;
 
 namespace WinSCPSyncLib
@@ -38,7 +39,7 @@ namespace WinSCPSyncLib
                 Protocol = (Protocol)Enum.Parse(typeof(Protocol), Job.Protocol),
                 HostName = Job.Host,
                 UserName = Job.HostUsername,
-                Password = Job.HostPassword,
+                Password = Cryptor.Decrypt(Job.HostPassword),
                 SshHostKeyFingerprint = Job.HostKeyFingerprint
             };
 
