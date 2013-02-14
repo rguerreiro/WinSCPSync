@@ -7,6 +7,7 @@
         <Grid Margin="10 10 10 10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -95,6 +96,19 @@
                     </TextBlock.Style>
                 </TextBlock>
             </StackPanel>
+            
+            <TextBlock x:Name="LastError" Grid.ColumnSpan="9" Grid.Row="1">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding LastRunWithError}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </Grid>
     </DockPanel>
 </UserControl>

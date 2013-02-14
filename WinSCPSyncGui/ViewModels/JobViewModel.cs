@@ -101,5 +101,15 @@ namespace WinSCPSyncGui.ViewModels
         {
             get { return _job.LastRun; }
         }
+
+        public bool LastRunWithError
+        {
+            get { return _job.LastRunWithError; }
+        }
+
+        public string LastError
+        {
+            get { return _job.LastError; }
+        }
     }
 }

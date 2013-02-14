@@ -49,10 +49,28 @@ namespace WinSCPSyncLib
 
             job.Running = true;
             job.RunningSince = DateTime.Now;
+            job.LastRunWithError = false;
 
             _db.Commit();
 
             _log.DebugFormat("Job #{0} was marked as running in the db", jobId);
+        }
+
+        public void MarkJobWithError(int jobId, string errorMessage)
+        {
+            _log.DebugFormat("Marking job #{0} with error {1}", jobId, errorMessage);
+
+            var job = GetJob(jobId);
+
+            if (job == null)
+                throw new ArgumentException("Job unknown");
+
+            job.LastRunWithError = true;
+            job.LastError = errorMessage;
+
+            _db.Commit();
+
+            _log.DebugFormat("Job #{0} was marked with error", jobId);
         }
 
         public void JobHasStopped(int jobId)

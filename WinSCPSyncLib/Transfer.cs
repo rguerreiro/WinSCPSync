@@ -161,19 +161,23 @@ namespace WinSCPSyncLib
                     {
                         // Probably aborted
                         _log.Error("Something happened locally while syncing " + TransferSource, sle);
+                        ErrorHappened(sle.GetBaseException().Message);
                     }
                     catch (SessionRemoteException sre)
                     {
                         // Connection went down or refused
                         _log.Error("Something happened remotely while syncing " + TransferSource, sre);
+                        ErrorHappened(sre.GetBaseException().Message);
                     }
                     catch (SessionException sessionException)
                     {
                         _log.Error("Unexpected session exception while syncing " + TransferSource, sessionException);
+                        ErrorHappened(sessionException.GetBaseException().Message);
                     }
                     catch (Exception exception)
                     {
                         _log.Error("Unexpected exception while syncing " + TransferSource, exception);
+                        ErrorHappened(exception.GetBaseException().Message);
                     }
 
                     _log.InfoFormat("Session for {0} ended", TransferSource);
@@ -207,6 +211,12 @@ namespace WinSCPSyncLib
                 var backupManager = IoC.Resolve<IBackupManager>();
                 backupManager.JobHasStopped(Job.Id);
             }
+        }
+
+        private void ErrorHappened(string message)
+        {
+            var backupManager = IoC.Resolve<IBackupManager>();
+            backupManager.MarkJobWithError(Job.Id, message);
         }
 
         /// <summary>

@@ -9,6 +9,7 @@ namespace WinSCPSyncLib
         IEnumerable<BackupJob> AllRunningJobs();
         BackupJob GetJob(int jobId);
         void MarkJobAsRunning(int jobId);
+        void MarkJobWithError(int jobId, string errorMessage);
         void JobHasStopped(int jobId);
         void AddJob(BackupJob job);
         void RemoveJob(int jobId);

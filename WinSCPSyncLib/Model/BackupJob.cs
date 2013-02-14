@@ -17,5 +17,7 @@ namespace WinSCPSyncLib.Model
         public bool Running { get; set; }
         public DateTime? RunningSince { get; set; }
         public DateTime? LastRun { get; set; }
+        public bool LastRunWithError { get; set; }
+        public string LastError { get; set; }
     }
 }
